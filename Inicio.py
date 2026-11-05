@@ -86,7 +86,7 @@ banner_html = """
     </style>
     <div class="banner-container">
         <!-- Reemplaza el enlace de abajo por el enlace Raw de tu GitHub -->
-        <img src="https://raw.githubusercontent.com/tu-usuario/varanalisis/main/banner.jpg" alt="Banner Genesis">
+        <img src="https://raw.githubusercontent.com/DaniDev1604/varanalisis/main/banner.jpg" alt="Banner Genesis">
     </div>
 """
 st.markdown(banner_html, unsafe_allow_html=True)
