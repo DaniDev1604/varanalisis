@@ -5,8 +5,8 @@ import streamlit as st
 #  Configuración de la página
 # ============================================================
 st.set_page_config(
-    page_title="Análisis de Sensores - Mi Ciudad",
-    page_icon="📊",
+    page_title="Análisis Genesis - Estrellas",
+    page_icon="🌌",
     layout="wide"
 )
 
@@ -17,7 +17,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Nombres que se reconocen como columna de tiempo (sin importar mayúsculas)
+# Nombres que se reconocen como columna de tiempo (Grafana suele exportar como _time o Time)
 CANDIDATAS_TIEMPO = ["time", "_time", "timestamp", "fecha", "date", "datetime"]
 
 
@@ -26,7 +26,6 @@ CANDIDATAS_TIEMPO = ["time", "_time", "timestamp", "fecha", "date", "datetime"]
 # ============================================================
 def preparar_datos(df):
     """Detecta la columna de tiempo y las columnas numéricas del CSV.
-
     Devuelve el DataFrame procesado, la lista de variables numéricas
     y el nombre original de la columna de tiempo (o None).
     """
@@ -44,7 +43,6 @@ def preparar_datos(df):
 
     # 2. Columnas de texto que en realidad son números (p. ej. "23,5")
     for c in df.columns:
-        # (pandas 3 usa StringDtype para texto, por eso no basta con dtype == object)
         if not pd.api.types.is_numeric_dtype(df[c]):
             convertida = pd.to_numeric(
                 df[c].astype(str).str.replace(",", ".", regex=False),
@@ -67,25 +65,26 @@ def normalizar(df):
 # ============================================================
 #  Encabezado y mapa
 # ============================================================
-st.title("📊 Análisis de datos de Sensores en Mi Ciudad")
+st.title("🌌 Análisis de Interacción: Experiencia Genesis")
 st.markdown("""
-    Esta aplicación permite analizar datos de sensores
-    recolectados en diferentes puntos de la ciudad.
+    Esta aplicación analiza los datos telemétricos exportados desde Grafana, 
+    registrando la interacción de los usuarios frente al stand físico (sensores ultrasónicos) 
+    durante las distintas fases de calibración y combustión estelar en Unity.
 """)
 
 eafit_location = pd.DataFrame({
     "lat": [6.2006],
     "lon": [-75.5783],
-    "location": ["Universidad EAFIT"]
+    "location": ["Instalación Física - Universidad EAFIT"]
 })
 
-st.subheader("📍 Ubicación de los Sensores - Universidad EAFIT")
-st.map(eafit_location, zoom=15)
+with st.expander("📍 Ubicación de la Instalación Física"):
+    st.map(eafit_location, zoom=15)
 
 # ============================================================
 #  Carga del archivo
 # ============================================================
-uploaded_file = st.file_uploader("Seleccione archivo CSV", type=["csv"])
+uploaded_file = st.file_uploader("Seleccione el archivo CSV exportado desde Grafana", type=["csv"])
 
 if uploaded_file is not None:
     try:
@@ -93,44 +92,43 @@ if uploaded_file is not None:
         df1, variables, col_tiempo = preparar_datos(df_original)
 
         if not variables:
-            st.error("No se encontraron columnas numéricas en el archivo.")
+            st.error("No se encontraron columnas numéricas en el archivo. Verifica el formato de Grafana.")
             st.stop()
 
         st.success(
-            f"Se detectaron **{len(variables)}** variable(s) numérica(s): "
+            f"Se detectaron **{len(variables)}** variable(s) interactiva(s): "
             + ", ".join(f"`{v}`" for v in variables)
         )
         if col_tiempo is None:
-            st.info("No se encontró columna de tiempo; se usará el número de registro como eje X.")
+            st.info("No se encontró columna de tiempo; se usará el número de lectura del Arduino como eje X.")
 
         tab1, tab2, tab3, tab4 = st.tabs(
-            ["📈 Visualización", "📊 Estadísticas", "🔍 Filtros", "🗺️ Información del Sitio"]
+            ["📈 Visualización", "📊 Estadísticas y Alertas", "🔍 Filtros de Interacción", "⚙️ Hardware del Proyecto"]
         )
 
         # ----------------------------------------------------
         #  TAB 1 · Visualización
         # ----------------------------------------------------
         with tab1:
-            st.subheader("Visualización de Datos")
+            st.subheader("Dinámica del Usuario en Tiempo Real")
 
             col_a, col_b = st.columns([3, 1])
             with col_a:
                 vars_graf = st.multiselect(
-                    "Variables a graficar",
+                    "Sensores a graficar",
                     variables,
                     default=variables if len(variables) <= 4 else variables[:2]
                 )
             with col_b:
-                chart_type = st.selectbox("Tipo de gráfico", ["Línea", "Área", "Barra"])
+                chart_type = st.selectbox("Tipo de gráfico", ["Área", "Línea", "Barra"])
 
             normalizado = st.checkbox(
                 "Normalizar escalas (0–1)",
-                help="Útil para comparar variables con unidades distintas, "
-                     "por ejemplo temperatura (°C) y humedad (%)."
+                help="Útil si tienes variables con escalas muy distintas (ej. proximidad vs temperatura)."
             )
 
             if not vars_graf:
-                st.warning("Seleccione al menos una variable.")
+                st.warning("Seleccione al menos un sensor de la lista.")
             else:
                 datos_graf = df1[vars_graf]
                 if normalizado:
@@ -143,53 +141,66 @@ if uploaded_file is not None:
                 else:
                     st.bar_chart(datos_graf)
 
-            if st.checkbox("Mostrar datos crudos"):
+            if st.checkbox("Mostrar matriz de datos crudos"):
                 st.dataframe(df1)
 
         # ----------------------------------------------------
-        #  TAB 2 · Estadísticas
+        #  TAB 2 · Estadísticas y Alertas
         # ----------------------------------------------------
         with tab2:
-            st.subheader("Análisis Estadístico")
+            st.subheader("Análisis Estadístico de la Experiencia")
 
-            st.write("#### Resumen de todas las variables")
-            st.dataframe(df1[variables].describe().T.round(2))
+            st.write("#### Resumen del comportamiento del sensor")
+            st.dataframe(df1[variables].describe().T.round(3))
 
-            st.write("#### Detalle por variable")
-            var_stats = st.selectbox("Variable", variables, key="var_stats")
+            st.write("#### Alertas por Umbral (Reglas de Negocio)")
+            var_stats = st.selectbox("Selecciona una variable para evaluar umbrales:", variables, key="var_stats")
             serie = df1[var_stats].dropna()
 
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Promedio", f"{serie.mean():.2f}")
-            m2.metric("Máximo", f"{serie.max():.2f}")
-            m3.metric("Mínimo", f"{serie.min():.2f}")
-            m4.metric("Desv. estándar", f"{serie.std():.2f}")
+            m1.metric("Promedio de lectura", f"{serie.mean():.2f}")
+            m2.metric("Pico Máximo", f"{serie.max():.2f}")
+            m3.metric("Valle Mínimo", f"{serie.min():.2f}")
+            m4.metric("Desv. Estándar (Ruido)", f"{serie.std():.2f}")
+
+            # Lógica adaptada para identificar si la mano estuvo mucho tiempo fuera de rango
+            if serie.max() <= 1.5:  # Si los datos están normalizados entre 0 y 1
+                limite_superior = 0.8
+                limite_inferior = 0.2
+            else: # Si los datos vienen puros del sensor en centímetros
+                limite_superior = serie.quantile(0.8)
+                limite_inferior = serie.quantile(0.2)
+
+            fuera_rango = serie[serie > limite_superior].count()
+            muy_cerca = serie[serie < limite_inferior].count()
+            
+            st.info(f"**Análisis de uso para `{var_stats}`:** El usuario llevó el sensor al límite superior ({limite_superior:.2f}) en **{fuera_rango}** lecturas, y al límite inferior ({limite_inferior:.2f}) en **{muy_cerca}** lecturas.")
 
             if len(variables) >= 2:
-                st.write("#### Correlación entre variables")
+                st.write("#### Correlación entre variables interactivas")
                 st.dataframe(df1[variables].corr().round(2))
                 st.caption(
-                    "Valores cercanos a 1 o −1 indican una relación lineal fuerte; "
-                    "cercanos a 0, poca relación."
+                    "Valores cercanos a 1 o −1 indican una relación directa fuerte en los controles del usuario; "
+                    "cercanos a 0, movimientos independientes."
                 )
 
         # ----------------------------------------------------
         #  TAB 3 · Filtros
         # ----------------------------------------------------
         with tab3:
-            st.subheader("Filtros de Datos")
+            st.subheader("Aislamiento de Fases y Filtros")
 
-            var_filtro = st.selectbox("Variable a filtrar", variables, key="var_filtro")
+            var_filtro = st.selectbox("Variable base para el filtro", variables, key="var_filtro")
             min_value = float(df1[var_filtro].min())
             max_value = float(df1[var_filtro].max())
 
             if min_value == max_value:
-                st.warning(f"⚠️ Todos los valores de `{var_filtro}` son iguales: {min_value:.2f}")
-                st.info("No es posible aplicar filtros cuando no hay variación en los datos.")
+                st.warning(f"⚠️ Todos los valores de `{var_filtro}` están estáticos en: {min_value:.2f}")
+                st.info("No hubo variación en este control durante la grabación del CSV.")
                 st.dataframe(df1)
             else:
                 rango = st.slider(
-                    f"Rango de {var_filtro}",
+                    f"Filtrar momentos donde `{var_filtro}` estuvo entre:",
                     min_value,
                     max_value,
                     (min_value, max_value),
@@ -198,15 +209,14 @@ if uploaded_file is not None:
 
                 filtrado = df1[df1[var_filtro].between(rango[0], rango[1])]
                 st.write(
-                    f"**{len(filtrado)}** de {len(df1)} registros con `{var_filtro}` "
-                    f"entre {rango[0]:.2f} y {rango[1]:.2f}:"
+                    f"**{len(filtrado)}** de {len(df1)} registros capturados cumplen esta condición:"
                 )
                 st.dataframe(filtrado)
 
                 st.download_button(
-                    label="⬇️ Descargar datos filtrados (CSV)",
+                    label="⬇️ Descargar segmento aislado (CSV)",
                     data=filtrado.to_csv().encode("utf-8"),
-                    file_name=f"datos_filtrados_{var_filtro}.csv",
+                    file_name=f"genesis_filtrado_{var_filtro}.csv",
                     mime="text/csv",
                 )
 
@@ -214,38 +224,37 @@ if uploaded_file is not None:
         #  TAB 4 · Información del sitio
         # ----------------------------------------------------
         with tab4:
-            st.subheader("Información del Sitio de Medición")
+            st.subheader("Arquitectura del Sistema - Proyecto Genesis")
 
             col1, col2 = st.columns(2)
 
             with col1:
-                st.write("### Ubicación del Sensor")
-                st.write("**Universidad EAFIT**")
-                st.write("- Latitud: 6.2006")
-                st.write("- Longitud: -75.5783")
-                st.write("- Altitud: ~1,495 metros sobre el nivel del mar")
+                st.write("### Hardware de Entrada")
+                st.write("- **Microcontrolador:** Arduino Uno R3")
+                st.write("- **Sensores principales:** HC-SR04 (Distancia / Masa), Botón Pulsador (Ignición / Temperatura)")
+                st.write("- **Frecuencia de muestreo:** ~10ms (Hardware) / 500ms (Base de Datos)")
 
             with col2:
-                st.write("### Detalles del Sensor")
-                st.write("- Tipo: ESP32")
-                st.write("- Variables medidas: " + ", ".join(variables))
-                st.write(f"- Número de registros: {len(df1)}")
+                st.write("### Software y Entorno")
+                st.write("- **Motor Gráfico:** Unity 6 (VFX Graph & Shader Graph)")
+                st.write("- **Base de Datos:** InfluxDB Cloud")
+                st.write("- **Dashboard en vivo:** Grafana")
+                st.write(f"- **Registros en esta sesión:** {len(df1)} lecturas procesadas")
                 if col_tiempo is not None and len(df1) > 0:
-                    st.write(f"- Desde: {df1.index.min():%Y-%m-%d %H:%M}")
-                    st.write(f"- Hasta: {df1.index.max():%Y-%m-%d %H:%M}")
-                st.write("- Ubicación: Campus universitario")
+                    st.write(f"- **Hora de inicio:** {df1.index.min():%Y-%m-%d %H:%M:%S}")
+                    st.write(f"- **Hora de fin:** {df1.index.max():%Y-%m-%d %H:%M:%S}")
 
     except Exception as e:
         st.error(f"Error al procesar el archivo: {str(e)}")
-        st.info("Asegúrese de que el archivo CSV tenga al menos una columna numérica.")
+        st.info("Asegúrate de haber descargado el CSV correctamente desde el panel Inspect > Data en Grafana.")
 else:
-    st.warning("Por favor, cargue un archivo CSV para comenzar el análisis.")
+    st.warning("Por favor, sube el archivo CSV de InfluxDB/Grafana para visualizar la telemetría de tu estrella.")
 
 # ============================================================
 #  Pie de página
 # ============================================================
 st.markdown("""
     ---
-    Desarrollado para el análisis de datos de sensores urbanos.
-    Ubicación: Universidad EAFIT, Medellín, Colombia
+    *Panel de análisis desarrollado para el seguimiento de interacciones físicas en ecosistemas transmedia.*  
+    *Universidad EAFIT - Diseño Interactivo*
 """)
