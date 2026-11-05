@@ -64,7 +64,6 @@ def normalizar(df):
 # ============================================================
 #  Encabezado principal
 # ============================================================
-st.title("🌌 Análisis de datos recibidos")
 
 banner_html = """
     <style>
@@ -90,7 +89,7 @@ banner_html = """
     </div>
 """
 st.markdown(banner_html, unsafe_allow_html=True)
-
+st.title("🌌 Análisis de datos recibidos")
 st.markdown("""
     Esta aplicación analiza los datos telemétricos exportados desde Grafana, 
     registrando la interacción de los usuarios frente al stand físico (sensores ultrasónicos) 
