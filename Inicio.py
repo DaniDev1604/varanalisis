@@ -85,7 +85,7 @@ banner_html = """
     <div class="banner-container">
         <!-- El video debe tener autoplay, loop, muted y playsinline para actuar como fondo -->
         <video autoplay loop muted playsinline>
-            <source src="https://cdn.pixabay.com/video/2020/05/25/40131-424918386_large.mp4" type="video/mp4">
+            <source src="https://www.youtube.com/watch?v=fG_po4mdIgk" type="video/mp4">
         </video>
     </div>
 """
