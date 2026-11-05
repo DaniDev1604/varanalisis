@@ -65,6 +65,7 @@ def normalizar(df):
 #  Encabezado principal
 # ============================================================
 st.title("🌌 Análisis de datos recibidos")
+
 banner_html = """
     <style>
     .banner-container {
@@ -75,21 +76,21 @@ banner_html = """
         margin-bottom: 1.5rem;
         box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
-    .banner-container video {
+    .banner-container img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Evita que el video se estire o deforme */
-        pointer-events: none; /* Evita que el usuario haga clic en el video */
+        object-fit: cover; /* Evita que la imagen se estire o deforme */
+        object-position: center; /* Asegura que el centro de la imagen siempre sea visible */
+        pointer-events: none;
     }
     </style>
     <div class="banner-container">
-        <!-- El video debe tener autoplay, loop, muted y playsinline para actuar como fondo -->
-        <video autoplay loop muted playsinline>
-            <source src="https://www.youtube.com/watch?v=fG_po4mdIgk" type="video/mp4">
-        </video>
+        <!-- Reemplaza el enlace de abajo por el enlace Raw de tu GitHub -->
+        <img src="https://raw.githubusercontent.com/tu-usuario/varanalisis/main/banner.jpg" alt="Banner Genesis">
     </div>
 """
 st.markdown(banner_html, unsafe_allow_html=True)
+
 st.markdown("""
     Esta aplicación analiza los datos telemétricos exportados desde Grafana, 
     registrando la interacción de los usuarios frente al stand físico (sensores ultrasónicos) 
