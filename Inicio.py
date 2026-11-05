@@ -5,8 +5,7 @@ import streamlit as st
 #  Configuración de la página
 # ============================================================
 st.set_page_config(
-    page_title="Análisis Genesis - Estrellas",
-    page_icon="🌌",
+    page_title="Nacimiento Estelar",
     layout="wide"
 )
 
@@ -63,23 +62,39 @@ def normalizar(df):
 
 
 # ============================================================
-#  Encabezado y mapa
+#  Encabezado principal
 # ============================================================
-st.title("🌌 Análisis de Interacción: Experiencia Genesis")
+st.title("🌌 Análisis de datos recibidos")
+banner_html = """
+    <style>
+    .banner-container {
+        width: 100%;
+        height: 350px; /* Puedes cambiar la altura del banner aquí */
+        overflow: hidden;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .banner-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Evita que el video se estire o deforme */
+        pointer-events: none; /* Evita que el usuario haga clic en el video */
+    }
+    </style>
+    <div class="banner-container">
+        <!-- El video debe tener autoplay, loop, muted y playsinline para actuar como fondo -->
+        <video autoplay loop muted playsinline>
+            <source src="https://cdn.pixabay.com/video/2020/05/25/40131-424918386_large.mp4" type="video/mp4">
+        </video>
+    </div>
+"""
+st.markdown(banner_html, unsafe_allow_html=True)
 st.markdown("""
     Esta aplicación analiza los datos telemétricos exportados desde Grafana, 
     registrando la interacción de los usuarios frente al stand físico (sensores ultrasónicos) 
-    durante las distintas fases de calibración y combustión estelar en Unity.
+    durante las distintas fases interactuables en unity.
 """)
-
-eafit_location = pd.DataFrame({
-    "lat": [6.2006],
-    "lon": [-75.5783],
-    "location": ["Instalación Física - Universidad EAFIT"]
-})
-
-with st.expander("📍 Ubicación de la Instalación Física"):
-    st.map(eafit_location, zoom=15)
 
 # ============================================================
 #  Carga del archivo
@@ -255,6 +270,6 @@ else:
 # ============================================================
 st.markdown("""
     ---
-    *Panel de análisis desarrollado para el seguimiento de interacciones físicas en ecosistemas transmedia.*  
+    *Panel de análisis desarrollado para el seguimiento de interacciones físicas desde unity.*  
     *Universidad EAFIT - Diseño Interactivo*
 """)
